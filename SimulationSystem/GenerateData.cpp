@@ -9,7 +9,7 @@ GenerateData::GenerateData(QObject * parent) : QObject(parent)
 	connect(timer1, &QTimer::timeout, this, &GenerateData::changeData);
 	timer1->setInterval(1000);//1√Î,ªπ√ª”–start
 }
-
+//≤‚ ‘
 
 GenerateData::~GenerateData()
 {
