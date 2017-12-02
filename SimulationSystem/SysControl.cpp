@@ -20,4 +20,5 @@ void SysControl::InitSys()
 	m_inwidget->init();
 	//写入各个操作类的connect信号
 	connect(m_inwidget, SIGNAL(startsim()), m_gen, SLOT(simulation()));
+	connect(m_gen, SIGNAL(simover()), m_inwidget, SLOT(updateChartData()));
 }

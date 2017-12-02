@@ -1,9 +1,3 @@
-﻿  Moc'ing GenerateData.h...
-  GenerateData.cpp
-  moc_GenerateData.cpp
-  moc_SysControl.cpp
-  SysControl.cpp
-  main.cpp
-  正在生成代码...
-  SimulationSystem.vcxproj -> C:\Users\21419\Desktop\701研究所\SimulationSystem\Win32\Debug\SimulationSystem.exe
-  SimulationSystem.vcxproj -> C:\Users\21419\Desktop\701研究所\SimulationSystem\Win32\Debug\SimulationSystem.pdb (Full PDB)
+﻿  InterfaceWidget.cpp
+  SimulationSystem.vcxproj -> C:\Users\21419\Desktop\SimulationSystem\Win32\Debug\SimulationSystem.exe
+  SimulationSystem.vcxproj -> C:\Users\21419\Desktop\SimulationSystem\Win32\Debug\SimulationSystem.pdb (Full PDB)

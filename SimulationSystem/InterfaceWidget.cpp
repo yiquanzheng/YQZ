@@ -5,6 +5,8 @@ InterfaceWidget::InterfaceWidget(QWidget *parent)
 	: QMainWindow(parent)
 {
 	m_DataInstance = QDocument::getInstance();
+	m_mswidget = new ModeSettingWidget();
+	connect(m_mswidget, SIGNAL(updateMode()), this, SLOT(updateStateWidget()));
 	ui.setupUi(this);
 }
 
@@ -16,32 +18,16 @@ InterfaceWidget::~InterfaceWidget()
 void InterfaceWidget::init()
 {
 	initMenuBar();
-	initmodeltype();
-	initSettingWidget();
-	ui.horizontalLayout_2->setStretchFactor(ui.groupBox, 2);
-	ui.horizontalLayout_2->setStretchFactor(ui.settingwidget, 3);
-	ui.horizontalLayout_2->setStretchFactor(ui.listView, 3);
-	ui.verticalLayout_2->setStretchFactor(ui.errorsettingwidget, 5);
-	ui.verticalLayout_2->setStretchFactor(ui.timesettingwidget, 2);
-	ui.verticalLayout_2->setStretchFactor(ui.comfrimwidget, 1);
-	ui.gridLayout->setColumnStretch(0, 2);
-	ui.gridLayout->setColumnStretch(1, 5);
-	ui.gridLayout_2->setColumnStretch(0, 1);
-	ui.gridLayout_2->setColumnStretch(1, 1);
-	ModelList.append(ui.radioButton);
-	ModelList.append(ui.radioButton_2);
-	ModelList.append(ui.radioButton_3);
-	ModelList.append(ui.radioButton_4);
-	ModelList.append(ui.radioButton_5);
-	ModelList.append(ui.radioButton_6);
-	ModelList.append(ui.radioButton_7);
-	ModelList.append(ui.radioButton_8);
-	ModelList.append(ui.radioButton_9);
-	ModelList.append(ui.radioButton_10);
-	for (int i = 0; i < ModelList.size(); i++)
-	{
-		connect(ModelList.at(i), SIGNAL(clicked(bool)), this, SLOT(faultModelSelected()));
-	}
+	initparBox();
+	connect(ui.modesetbtn, SIGNAL(clicked()), this, SLOT(openModeSetWidget()));
+	connect(ui.startsimbtn, SIGNAL(clicked()), this, SLOT(run()));
+	m_mswidget->init();
+}
+
+void InterfaceWidget::openModeSetWidget()
+{
+	m_mswidget->show();
+	m_mswidget->setFocus();
 }
 
 void InterfaceWidget::initMenuBar()
@@ -83,738 +69,410 @@ void InterfaceWidget::initMenuBar()
 	ui.menuBar->setFixedHeight(40);
 }
 
-void InterfaceWidget::initmodeltype()
+void InterfaceWidget::initparBox()        //初始化参数可选框
 {
-	faultmodelname[0] = QString::fromLocal8Bit("舱室温度升高");
-	faultmodelname[1] = QString::fromLocal8Bit("舱室湿度升高");
-	faultmodelname[2] = QString::fromLocal8Bit("主机运行失效");
-	faultmodelname[3] = QString::fromLocal8Bit("软件运行失效");
-	faultmodelname[4] = QString::fromLocal8Bit("导弹来袭");
-	faultmodelname[5] = QString::fromLocal8Bit("主机CPU温度升高");
-	faultmodelname[6] = QString::fromLocal8Bit("主机硬盘温度升高");
-	faultmodelname[7] = QString::fromLocal8Bit("主板主板温度升高");
-	faultmodelname[8] = QString::fromLocal8Bit("主机可用资源减少");
-	faultmodelname[9] = QString::fromLocal8Bit("任务优先级变更");
-	QVector<QString> modeltype1;    //舱室温度上升可选项
-	modeltype1.append(QString::fromLocal8Bit("舱室起火"));
-	modeltype1.append(QString::fromLocal8Bit("空调失效"));
-	QVector<QString> modeltype2;    //舱室进水可选项
-	modeltype2.append(QString::fromLocal8Bit("舱室进水"));
-	QVector<QString> modeltype3;   //主机运行时失效可选项
-	modeltype3.append(QString::fromLocal8Bit("主机运行失效"));
-	QVector<QString> modeltype4;   //主机运行时失效可选项
-	modeltype4.append(QString::fromLocal8Bit("软件运行失效"));
-	QVector<QString> modeltype5;   //导弹来袭
-	modeltype5.append(QString::fromLocal8Bit("导弹来袭"));
-	QVector<QString> modeltype6;   //主机CPU温度升高
-	modeltype6.append(QString::fromLocal8Bit("CPU超频使用"));
-	modeltype6.append(QString::fromLocal8Bit("风扇散热不好"));
-	modeltype6.append(QString::fromLocal8Bit("主机起火"));
-	QVector<QString> modeltype7;   //主机硬盘温度升高
-	modeltype7.append(QString::fromLocal8Bit("硬盘读写频繁"));
-	modeltype7.append(QString::fromLocal8Bit("风扇散热不好"));
-	modeltype7.append(QString::fromLocal8Bit("主机起火"));
-	QVector<QString> modeltype8;   //主机主板温度升高
-	modeltype8.append(QString::fromLocal8Bit("固件老化灰尘多"));
-	modeltype8.append(QString::fromLocal8Bit("风扇散热不好"));
-	modeltype8.append(QString::fromLocal8Bit("主机起火"));
-	QVector<QString> modeltype9;
-	modeltype9.append(QString::fromLocal8Bit("软件运行占用资源过多"));
-	QVector<QString> modeltype10;
-	modeltype10.append(QString::fromLocal8Bit("任务优先级变更"));
+	parname[0] = QString::fromLocal8Bit("舱室温度");
+	parname[1] = QString::fromLocal8Bit("舱室湿度");
+	parname[2] = QString::fromLocal8Bit("主机在线状态");
+	parname[3] = QString::fromLocal8Bit("主板温度");
+	parname[4] = QString::fromLocal8Bit("CPU温度");
+	parname[5] = QString::fromLocal8Bit("硬盘温度");
+	parname[6] = QString::fromLocal8Bit("主机CPU占用率");
+	parname[7] = QString::fromLocal8Bit("主机内存占用率");
+	parname[8] = QString::fromLocal8Bit("主机带宽占用率");
+	parname[9] = QString::fromLocal8Bit("主机磁盘占用率");
+	parname[10] = QString::fromLocal8Bit("软件在线状态");
+	parname[11] = QString::fromLocal8Bit("软件CPU占用率");
+	parname[12] = QString::fromLocal8Bit("软件内存占用率");
+	parname[13] = QString::fromLocal8Bit("软件带宽占用率");
+	parname[14] = QString::fromLocal8Bit("软件磁盘占用率");
+	pParSelect11 = parname[0];
+	pParSelect12 = parname[1];
+	pParSelect21 = parname[2];
+	pParSelect22 = parname[10];
 
-	modeltype.append(modeltype1);
-	modeltype.append(modeltype2);
-	modeltype.append(modeltype3);
-	modeltype.append(modeltype4);
-	modeltype.append(modeltype5);
-	modeltype.append(modeltype6);
-	modeltype.append(modeltype7);
-	modeltype.append(modeltype8);
-	modeltype.append(modeltype9);
-	modeltype.append(modeltype10);
-}
 
-void InterfaceWidget::initSettingWidget()           //初始化下拉列表框内容
-{
-	//更改可选模式相关项
-	pModelLineEdit = new QLineEdit(this);
-	pModelLineEdit->setReadOnly(true);
-	ui.modelBox->setLineEdit(pModelLineEdit);
-	connect(pModelLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(modeltextChanged(const QString &)));
-	pModelListWidget = new QListWidget(this);
-	ui.modelBox->setModel(pModelListWidget->model());
-	ui.modelBox->setView(pModelListWidget);
-
-	//更改舱室选择相关项
-	pCabinLineEdit = new QLineEdit(this);
-	pCabinLineEdit->setReadOnly(true);
-	ui.cabinBox->setLineEdit(pCabinLineEdit);
-	connect(pCabinLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(cabintextChanged(const QString &)));
-	pCabinListWidget = new QListWidget(this);
-	ui.cabinBox->setModel(pCabinListWidget->model());
-	ui.cabinBox->setView(pCabinListWidget);
-
-	//更改主机选择相关项
-	pHostLineEdit = new QLineEdit(this);
-	pHostLineEdit->setReadOnly(true);
-	ui.hostBox->setLineEdit(pHostLineEdit);
-	connect(pHostLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(hosttextChanged(const QString &)));
-	pHostListWidget = new QListWidget(this);
-	ui.hostBox->setModel(pHostListWidget->model());
-	ui.hostBox->setView(pHostListWidget);
-
-	//更改软件选择相关项
-	pSoftwareLineEdit = new QLineEdit(this);
-	pSoftwareLineEdit->setReadOnly(true);
-	ui.softwareBox->setLineEdit(pSoftwareLineEdit);
-	connect(pSoftwareLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(softwaretextChanged(const QString &)));
-	pSoftwareListWidget = new QListWidget(this);
-	ui.softwareBox->setModel(pSoftwareListWidget->model());
-	ui.softwareBox->setView(pSoftwareListWidget);
-	
-	//默认设置一个初始选择
-	for (int i = 0; i < 10; i++)
+    //窗体11
+	pParLineEdit11 = new QLineEdit(ui.selectwidget11);
+	pParLineEdit11->setReadOnly(true);
+	ui.parBox11->setLineEdit(pParLineEdit11);
+	connect(pParLineEdit11, SIGNAL(textChanged(const QString &)), this, SLOT(showparlast11(const QString &)));
+	pPosLineEdit11 = new QLineEdit(ui.selectwidget11);
+	pPosLineEdit11->setReadOnly(true);
+	ui.posBox11->setLineEdit(pPosLineEdit11);
+	connect(pPosLineEdit11, SIGNAL(textChanged(const QString &)), this, SLOT(showposlast11(const QString &)));
+	pParListWidget11 = new QListWidget(ui.selectwidget11);
+	ui.parBox11->setModel(pParListWidget11->model());
+	ui.parBox11->setView(pParListWidget11);
+	pPosListWidget11 = new QListWidget(ui.selectwidget11);
+	ui.posBox11->setModel(pPosListWidget11->model());
+	ui.posBox11->setView(pPosListWidget11);
+	for (int i = 0; i < 15; i++)
 	{
-		modelSelect[i] = modeltype.at(i).at(0);
-	}
-
-	//设置按钮值
-	connect(ui.comfrim, SIGNAL(clicked(bool)), this, SLOT(comfrim()));
-	connect(ui.clear, SIGNAL(clicked(bool)), this, SLOT(clear()));
-
-}
-
-void InterfaceWidget::faultModelSelected()   //模式选择复选框事件
-{
-	for (int i = 0; i < ModelList.size(); i++)
-	{
-		if (sender() == ModelList.at(i))
-		{
-			m_Last_Faultmodel = i+1;
-			ui.modelBox->setEnabled(false);
-			ui.hostBox->setEnabled(false);
-			ui.cabinBox->setEnabled(false);
-			ui.softwareBox->setEnabled(false);
-			showSettingWidget();
-			break;
-		}
-	}
-}
-
-
-void InterfaceWidget::showSettingWidget()     //显示故障模式
-{
-	switch (m_Last_Faultmodel)
-	{
-	case 1:
-		ui.modelBox->setEnabled(true);
-		ui.cabinBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 2:
-		ui.modelBox->setEnabled(true);
-		ui.cabinBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 3:
-		ui.modelBox->setEnabled(true);
-		ui.hostBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 4:
-		ui.modelBox->setEnabled(true);
-		ui.softwareBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 5:
-		ui.modelBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 6:
-		ui.modelBox->setEnabled(true);
-		ui.hostBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 7:
-		ui.modelBox->setEnabled(true);
-		ui.hostBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 8:
-		ui.modelBox->setEnabled(true);
-		ui.hostBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 9:
-		ui.modelBox->setEnabled(true);
-		ui.hostBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	case 10:
-		ui.modelBox->setEnabled(true);
-		setmodelBox();
-		setcabinBox();
-		sethostBox();
-		setsoftwareBox();
-		break;
-	default:
-		break;
-	}
-}
-
-
-//模式选择框相关事件
-void InterfaceWidget::setmodelBox()       //设置模式复选框
-{
-	pModelListWidget->clear();
-	for (int i = 0; i < modeltype.at(m_Last_Faultmodel-1).size(); i++)
-	{
-		QListWidgetItem *pItem = new QListWidgetItem(pModelListWidget);
-		pModelListWidget->addItem(pItem);
+		QListWidgetItem *pItem = new QListWidgetItem(pParListWidget11);
+		pParListWidget11->addItem(pItem);
 		pItem->setData(Qt::UserRole, i);
-		QRadioButton *pRadioButton = new QRadioButton(this);
-		pRadioButton->setText(modeltype.at(m_Last_Faultmodel - 1).at(i));
-		if (modelSelect[m_Last_Faultmodel - 1] == modeltype.at(m_Last_Faultmodel - 1).at(i))
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget11);
+		pRadioButton->setText(parname[i]);
+		if (i == pParListId11)
 		{
 			pRadioButton->setChecked(true);
 		}
-		pModelListWidget->addItem(pItem);
-		pModelListWidget->setItemWidget(pItem, pRadioButton);
-		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(modelChanged()));
+		pParListWidget11->addItem(pItem);
+		pParListWidget11->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(parBoxChange11()));
 	}
-	pModelLineEdit->setText(modelSelect[m_Last_Faultmodel - 1]);
-	pModelLineEdit->setToolTip(modelSelect[m_Last_Faultmodel - 1]);
+	pParLineEdit11->setText(pParSelect11);
+	pParLineEdit11->setToolTip(pParSelect11);
+	setPosWidget11();
+
+
+	//窗体12
+	pParLineEdit12 = new QLineEdit(ui.selectwidget12);
+	pParLineEdit12->setReadOnly(true);
+	ui.parBox12->setLineEdit(pParLineEdit12);
+	connect(pParLineEdit12, SIGNAL(textChanged(const QString &)), this, SLOT(showparlast12(const QString &)));
+	pPosLineEdit12 = new QLineEdit(ui.selectwidget12);
+	pPosLineEdit12->setReadOnly(true);
+	ui.posBox12->setLineEdit(pPosLineEdit12);
+	connect(pPosLineEdit12, SIGNAL(textChanged(const QString &)), this, SLOT(showposlast12(const QString &)));
+	pParListWidget12 = new QListWidget(ui.selectwidget12);
+	ui.parBox12->setModel(pParListWidget12->model());
+	ui.parBox12->setView(pParListWidget12);
+	pPosListWidget12 = new QListWidget(ui.selectwidget12);
+	ui.posBox12->setModel(pPosListWidget12->model());
+	ui.posBox12->setView(pPosListWidget12);
+	for (int i = 0; i < 15; i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pParListWidget12);
+		pParListWidget12->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget12);
+		pRadioButton->setText(parname[i]);
+		if (i == pParListId12)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pParListWidget12->addItem(pItem);
+		pParListWidget12->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(parBoxChange12()));
+	}
+	pParLineEdit12->setText(pParSelect12);
+	pParLineEdit12->setToolTip(pParSelect12);
+	setPosWidget12();
+
+
+	//窗体21
+	pParLineEdit21 = new QLineEdit(ui.selectwidget21);
+	pParLineEdit21->setReadOnly(true);
+	ui.parBox21->setLineEdit(pParLineEdit21);
+	connect(pParLineEdit21, SIGNAL(textChanged(const QString &)), this, SLOT(showparlast21(const QString &)));
+	pPosLineEdit21 = new QLineEdit(ui.selectwidget21);
+	pPosLineEdit21->setReadOnly(true);
+	ui.posBox21->setLineEdit(pPosLineEdit21);
+	connect(pPosLineEdit21, SIGNAL(textChanged(const QString &)), this, SLOT(showposlast21(const QString &)));
+	pParListWidget21 = new QListWidget(ui.selectwidget21);
+	ui.parBox21->setModel(pParListWidget21->model());
+	ui.parBox21->setView(pParListWidget21);
+	pPosListWidget21 = new QListWidget(ui.selectwidget21);
+	ui.posBox21->setModel(pPosListWidget21->model());
+	ui.posBox21->setView(pPosListWidget21);
+	for (int i = 0; i < 15; i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pParListWidget21);
+		pParListWidget21->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget21);
+		pRadioButton->setText(parname[i]);
+		if (i == pParListId21)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pParListWidget21->addItem(pItem);
+		pParListWidget21->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(parBoxChange21()));
+	}
+	pParLineEdit21->setText(pParSelect21);
+	pParLineEdit21->setToolTip(pParSelect21);
+	setPosWidget21();
+
+
+	//窗体22
+	pParLineEdit22 = new QLineEdit(ui.selectwidget22);
+	pParLineEdit22->setReadOnly(true);
+	ui.parBox22->setLineEdit(pParLineEdit22);
+	connect(pParLineEdit22, SIGNAL(textChanged(const QString &)), this, SLOT(showparlast22(const QString &)));
+	pPosLineEdit22 = new QLineEdit(ui.selectwidget22);
+	pPosLineEdit22->setReadOnly(true);
+	ui.posBox22->setLineEdit(pPosLineEdit22);
+	connect(pPosLineEdit22, SIGNAL(textChanged(const QString &)), this, SLOT(showposlast22(const QString &)));
+	pParListWidget22 = new QListWidget(ui.selectwidget22);
+	ui.parBox22->setModel(pParListWidget22->model());
+	ui.parBox22->setView(pParListWidget22);
+	pPosListWidget22 = new QListWidget(ui.selectwidget22);
+	ui.posBox22->setModel(pPosListWidget22->model());
+	ui.posBox22->setView(pPosListWidget22);
+	for (int i = 0; i < 15; i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pParListWidget22);
+		pParListWidget22->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget22);
+		pRadioButton->setText(parname[i]);
+		if (i == pParListId22)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pParListWidget22->addItem(pItem);
+		pParListWidget22->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(parBoxChange22()));
+	}
+	pParLineEdit22->setText(pParSelect22);
+	pParLineEdit22->setToolTip(pParSelect22);
+	setPosWidget22();
+
+	//设置图表绘制区域
+	setAllChartView();
 }
 
-void InterfaceWidget::modelChanged()
+void InterfaceWidget::setAllChartView()
 {
-	QString strSelectedData("");
-	int nCount = pModelListWidget->count();
-	QObject *object = QObject::sender();
-	for (int i = 0; i < nCount; ++i)
+	//第一个chart
+	line11 = new QLineSeries(this);
+	line11->setPointsVisible(true);
+	//line11->setPointLabelsFormat("@yPoint");
+	//line11->setPointLabelsVisible(true);
+	axisX11 = new QBarCategoryAxis();
+	QStringList categories;
+	for (int i = 0; i < maxshow; i++)
 	{
-		QListWidgetItem *pItem = pModelListWidget->item(i);
-		QWidget *pWidget = pModelListWidget->itemWidget(pItem);
-		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
-		if (sender() == pCheckBox)
+		categories << QString::number(i+1);
+	}
+	axisX11->append(categories);   //设置X坐标范围   
+	axisX11->setTitleText("t/s"); //设置X坐标名字  
+	axisY11 = new QValueAxis(); 
+	axisY11->setRange(0, 100);
+	chartview11 = new QChartView(this);
+	chartview11->setRenderHint(QPainter::Antialiasing);
+	ui.verticalLayout_2->addWidget(chartview11);
+	ui.verticalLayout_2->setStretch(0, 1);
+	ui.verticalLayout_2->setStretch(1, 7);
+	chart11 = chartview11->chart();
+	chart11->setAnimationOptions(QChart::SeriesAnimations);//设置曲线呈动画显示 
+	chart11->addSeries(line11);
+	chart11->addAxis(axisX11, Qt::AlignBottom);  //并且XY轴的位置是下和左  
+	chart11->addAxis(axisY11, Qt::AlignLeft);
+	chart11->setAxisX(axisX11, line11);
+	chart11->setAxisY(axisY11, line11);
+	chart11->legend()->hide();
+
+
+	//第二个chart
+	line12 = new QLineSeries(this);
+	line12->setPointsVisible(true);
+	//line12->setPointLabelsFormat("@yPoint");
+	//line12->setPointLabelsVisible(true);
+	axisX12 = new QBarCategoryAxis();
+	axisX12->append(categories);   //设置X坐标范围   
+	axisX12->setTitleText("t/s"); //设置X坐标名字  
+	axisY12 = new QValueAxis();
+	axisY12->setRange(0, 100);
+	chartview12 = new QChartView(this);
+	chartview12->setRenderHint(QPainter::Antialiasing);
+	ui.verticalLayout_3->addWidget(chartview12);
+	ui.verticalLayout_3->setStretch(0, 1);
+	ui.verticalLayout_3->setStretch(1, 7);
+	chart12 = chartview12->chart();
+	chart12->setAnimationOptions(QChart::SeriesAnimations);//设置曲线呈动画显示 
+	chart12->addSeries(line12);
+	chart12->addAxis(axisX12, Qt::AlignBottom);  //并且XY轴的位置是下和左  
+	chart12->addAxis(axisY12, Qt::AlignLeft);
+	chart12->setAxisX(axisX12, line12);
+	chart12->setAxisY(axisY12, line12);
+	chart12->legend()->hide();
+
+
+	//第三个chart
+	line21 = new QLineSeries(this);
+	line21->setPointsVisible(true);
+	//line21->setPointLabelsFormat("@yPoint");
+	//line21->setPointLabelsVisible(true);
+	axisX21 = new QBarCategoryAxis();
+	axisX21->append(categories);   //设置X坐标范围   
+	axisX21->setTitleText("t/s"); //设置X坐标名字  
+	axisY21 = new QValueAxis();
+	axisY21->setRange(0, 100);
+	chartview21 = new QChartView(this);
+	chartview21->setRenderHint(QPainter::Antialiasing);
+	ui.verticalLayout_4->addWidget(chartview21);
+	ui.verticalLayout_4->setStretch(0, 1);
+	ui.verticalLayout_4->setStretch(1, 7);
+	chart21 = chartview21->chart();
+	chart21->setAnimationOptions(QChart::SeriesAnimations);//设置曲线呈动画显示 
+	chart21->addSeries(line21);
+	chart21->addAxis(axisX21, Qt::AlignBottom);  //并且XY轴的位置是下和左  
+	chart21->addAxis(axisY21, Qt::AlignLeft);
+	chart21->setAxisX(axisX21, line21);
+	chart21->setAxisY(axisY21, line21);
+	chart21->legend()->hide();
+
+
+	//第四个chart
+	line22 = new QLineSeries(this);
+	line22->setPointsVisible(true);
+	//line22->setPointLabelsFormat("@yPoint");
+	//line22->setPointLabelsVisible(true);
+	axisX22 = new QBarCategoryAxis();
+	axisX22->append(categories);   //设置X坐标范围   
+	axisX22->setTitleText("t/s"); //设置X坐标名字  
+	axisY22 = new QValueAxis();
+	axisY22->setRange(0, 100);
+	chartview22 = new QChartView(this);
+	chartview22->setRenderHint(QPainter::Antialiasing);
+	ui.verticalLayout->addWidget(chartview22);
+	ui.verticalLayout->setStretch(0, 1);
+	ui.verticalLayout->setStretch(1, 7);
+	chart22 = chartview22->chart();
+	chart22->setAnimationOptions(QChart::SeriesAnimations);//设置曲线呈动画显示 
+	chart22->addSeries(line22);
+	chart22->addAxis(axisX22, Qt::AlignBottom);  //并且XY轴的位置是下和左  
+	chart22->addAxis(axisY22, Qt::AlignLeft);
+	chart22->setAxisX(axisX22, line22);
+	chart22->setAxisY(axisY22, line22);
+	chart22->legend()->hide();
+
+}
+
+QList<float> InterfaceWidget::findData(int par, QString pos)
+{
+	int id;
+	QList<float> data;
+	if (par == 0 || par == 1)
+	{
+		//观察舱室的信息
+		id = m_DataInstance->SelectCabinParBycabinID(pos);
+		if (id != -1)
 		{
-			strSelectedData.append(modeltype.at(m_Last_Faultmodel - 1).at(i));
+			if (par == 0)
+			{
+				data = m_DataInstance->m_CabinPar.at(id)->cabinT;
+			}
+			else
+			{
+				data = m_DataInstance->m_CabinPar.at(id)->cabinH;
+			}
+
 		}
 	}
-	modelSelect[m_Last_Faultmodel - 1] = strSelectedData;
-	pModelLineEdit->setText(modelSelect[m_Last_Faultmodel - 1]);
-	pModelLineEdit->setToolTip(modelSelect[m_Last_Faultmodel - 1]);
-}
-
-void InterfaceWidget::modeltextChanged(const QString &text)
-{
-	pModelLineEdit->setText(modelSelect[m_Last_Faultmodel - 1]);
-}
-
-//舱室选择框相关事件
-void InterfaceWidget::setcabinBox()       //设置舱室复选框
-{
-	pCabinListWidget->clear();
-	QVector<QString> AllcabinID = m_DataInstance->SelectAllcabinID();
-	QString selectcabin = cabinSelect[m_Last_Faultmodel - 1];
-	QStringList tempcabin = selectcabin.split(";");
-	for (int i = 0; i < AllcabinID.size(); i++)
+	else if (par >= 2 && par <= 9)
 	{
-		QListWidgetItem *pItem = new QListWidgetItem(pCabinListWidget);
-		pCabinListWidget->addItem(pItem);
-		pItem->setData(Qt::UserRole, i);
-		QCheckBox *pCheckBox = new QCheckBox(this);
-		pCheckBox->setText(AllcabinID.at(i));
-		for (int j = 0; j < tempcabin.size(); j++)
+		//观察主机的信息
+		id = m_DataInstance->SelectHostParByhostID(pos);
+		if (id != -1)
 		{
-			if (AllcabinID.at(i) == tempcabin.at(j))
+			if (pParListId11 == 2)
 			{
-				pCheckBox->setChecked(true);
-				break;
+				QList<bool> data1;
+				data1 = m_DataInstance->m_HostPar.at(id)->hostState;
+				for (int m = 0; m < data1.size(); m++)
+				{
+					if (data1.at(m) == false)
+					{
+						data.append(0);
+					}
+					else
+					{
+						data.append(1);
+					}
+				}
+			}
+			else if (pParListId11 == 3)
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostMT;
+			}
+			else if (pParListId11 == 4)
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostCT;
+			}
+			else if (pParListId11 == 5)
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostHT;
+			}
+			else if (pParListId11 == 6)
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostCOR;
+			}
+			else if (pParListId11 == 7)
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostMOR;
+			}
+			else if (pParListId11 == 8)
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostBOR;
+			}
+			else
+			{
+				data = m_DataInstance->m_HostPar.at(id)->hostSOR;
 			}
 		}
-		pCabinListWidget->addItem(pItem);
-		pCabinListWidget->setItemWidget(pItem, pCheckBox);
-		connect(pCheckBox, SIGNAL(clicked(bool)), this, SLOT(cabinChanged()));
 	}
-	pCabinLineEdit->setText(selectcabin);
-	pCabinLineEdit->setToolTip(selectcabin);
-}
-
-void InterfaceWidget::cabinChanged()     //改变舱室相关选项
-{
-	QString strSelectedData("");
-	int nCount = pCabinListWidget->count();
-	for (int i = 0; i < nCount; ++i)
+	else if (par >= 10 && par <= 14)
 	{
-		QListWidgetItem *pItem = pCabinListWidget->item(i);
-		QWidget *pWidget = pCabinListWidget->itemWidget(pItem);
-		QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-		if (pCheckBox->isChecked())
+		id = m_DataInstance->SelectSoftwareParBysoftwareID(pos);
+		if (id != -1)
 		{
-			QString strText = pCheckBox->text();
-			strSelectedData.append(strText).append(";");
+			if (pParListId11 == 10)
+			{
+				QList<bool> data1;
+				data1 = m_DataInstance->m_SoftwarePar.at(id)->softwareState;
+				for (int m = 0; m < data1.size(); m++)
+				{
+					if (data1.at(m) == false)
+					{
+						data.append(0);
+					}
+					else
+					{
+						data.append(1);
+					}
+				}
+			}
+			if (pParListId11 == 11)
+			{
+				data = m_DataInstance->m_SoftwarePar.at(id)->softwareCOR;
+			}
+			else if (pParListId11 == 12)
+			{
+				data = m_DataInstance->m_SoftwarePar.at(id)->softwareMOR;
+			}
+			else if (pParListId11 == 13)
+			{
+				data = m_DataInstance->m_SoftwarePar.at(id)->softwareBOR;
+			}
+			else
+			{
+				data = m_DataInstance->m_SoftwarePar.at(id)->softwareSOR;
+			}
 		}
-		//所点击的复选框
-		if (sender() == pCheckBox)
-		{
-			int nData = pItem->data(Qt::UserRole).toInt();
-			qDebug() << QString("I am sender...id : %1").arg(nData);
-		}
-	}
-	if (strSelectedData.endsWith(";"))
-		strSelectedData.remove(strSelectedData.count() - 1, 1);
-	cabinSelect[m_Last_Faultmodel - 1] = strSelectedData;
-	if (!strSelectedData.isEmpty())
-	{
-		pCabinLineEdit->setText(strSelectedData);
-		pCabinLineEdit->setToolTip(strSelectedData);
 	}
 	else
 	{
-		pCabinLineEdit->clear();
+		//观察导弹信息
 	}
-}
-
-void InterfaceWidget::cabintextChanged(const QString &text)      //舱室框内容更新
-{
-	if (cabinSelect[m_Last_Faultmodel - 1] != "")
-	{
-		pCabinLineEdit->setText(cabinSelect[m_Last_Faultmodel - 1]);
-	}
-}
-
-//主机选择框相关事件
-void InterfaceWidget::sethostBox()        //设置主机复选框
-{
-	pHostListWidget->clear();
-	QVector<QString> AllhostID = m_DataInstance->SelectAllhostID();
-	QString selecthost = hostSelect[m_Last_Faultmodel - 1];
-	QStringList temphost = selecthost.split(";");
-	for (int i = 0; i < AllhostID.size(); i++)
-	{
-		QListWidgetItem *pItem = new QListWidgetItem(pHostListWidget);
-		pHostListWidget->addItem(pItem);
-		pItem->setData(Qt::UserRole, i);
-		QCheckBox *pCheckBox = new QCheckBox(this);
-		pCheckBox->setText(AllhostID.at(i));
-		for (int j = 0; j < temphost.size(); j++)
-		{
-			if (AllhostID.at(i) == temphost.at(j))
-			{
-				pCheckBox->setChecked(true);
-				break;
-			}
-		}
-		pHostListWidget->addItem(pItem);
-		pHostListWidget->setItemWidget(pItem, pCheckBox);
-		connect(pCheckBox, SIGNAL(clicked(bool)), this, SLOT(hostChanged()));
-	}
-	pHostLineEdit->setText(selecthost);
-	pHostLineEdit->setToolTip(selecthost);
-}
-
-void InterfaceWidget::hostChanged()     //改变主机相关选项
-{
-	QString strSelectedData("");
-	int nCount = pHostListWidget->count();
-	for (int i = 0; i < nCount; ++i)
-	{
-		QListWidgetItem *pItem = pHostListWidget->item(i);
-		QWidget *pWidget = pHostListWidget->itemWidget(pItem);
-		QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-		if (pCheckBox->isChecked())
-		{
-			QString strText = pCheckBox->text();
-			strSelectedData.append(strText).append(";");
-		}
-		//所点击的复选框
-		if (sender() == pCheckBox)
-		{
-			int nData = pItem->data(Qt::UserRole).toInt();
-			qDebug() << QString("I am sender...id : %1").arg(nData);
-		}
-	}
-	if (strSelectedData.endsWith(";"))
-		strSelectedData.remove(strSelectedData.count() - 1, 1);
-	hostSelect[m_Last_Faultmodel - 1] = strSelectedData;
-	if (!strSelectedData.isEmpty())
-	{
-		pHostLineEdit->setText(strSelectedData);
-		pHostLineEdit->setToolTip(strSelectedData);
-	}
-	else
-	{
-		pHostLineEdit->clear();
-	}
-}
-
-void InterfaceWidget::hosttextChanged(const QString &text)       //主机框内容更新
-{
-	if (hostSelect[m_Last_Faultmodel - 1] != "")
-	{
-		pHostLineEdit->setText(hostSelect[m_Last_Faultmodel - 1]);
-	}
-}
-
-//软件选择框相关事件
-void InterfaceWidget::setsoftwareBox()    //设置软件复选框
-{
-	pSoftwareListWidget->clear();
-	QVector<QString> AllsoftwareID = m_DataInstance->SelectAllsoftwareID();
-	QString selectsoftware = softwareSelect[m_Last_Faultmodel - 1];
-	QStringList tempsoftware = selectsoftware.split(";");
-	for (int i = 0; i < AllsoftwareID.size(); i++)
-	{
-		QListWidgetItem *pItem = new QListWidgetItem(pSoftwareListWidget);
-		pSoftwareListWidget->addItem(pItem);
-		pItem->setData(Qt::UserRole, i);
-		QCheckBox *pCheckBox = new QCheckBox(this);
-		pCheckBox->setText(AllsoftwareID.at(i));
-		for (int j = 0; j < tempsoftware.size(); j++)
-		{
-			if (AllsoftwareID.at(i) == tempsoftware.at(j))
-			{
-				pCheckBox->setChecked(true);
-				break;
-			}
-		}
-		pSoftwareListWidget->addItem(pItem);
-		pSoftwareListWidget->setItemWidget(pItem, pCheckBox);
-		connect(pCheckBox, SIGNAL(clicked(bool)), this, SLOT(softwareChanged()));
-	}
-	pSoftwareLineEdit->setText(selectsoftware);
-	pSoftwareLineEdit->setToolTip(selectsoftware);
-}
-
-void InterfaceWidget::softwareChanged()     //改变软件相关选项
-{
-	QString strSelectedData("");
-	int nCount = pSoftwareListWidget->count();
-	for (int i = 0; i < nCount; ++i)
-	{
-		QListWidgetItem *pItem = pSoftwareListWidget->item(i);
-		QWidget *pWidget = pSoftwareListWidget->itemWidget(pItem);
-		QCheckBox *pCheckBox = (QCheckBox *)pWidget;
-		if (pCheckBox->isChecked())
-		{
-			QString strText = pCheckBox->text();
-			strSelectedData.append(strText).append(";");
-		}
-		//所点击的复选框
-		if (sender() == pCheckBox)
-		{
-			int nData = pItem->data(Qt::UserRole).toInt();
-			qDebug() << QString("I am sender...id : %1").arg(nData);
-		}
-	}
-	if (strSelectedData.endsWith(";"))
-		strSelectedData.remove(strSelectedData.count() - 1, 1);
-	softwareSelect[m_Last_Faultmodel - 1] = strSelectedData;
-	if (!strSelectedData.isEmpty())
-	{
-		pSoftwareLineEdit->setText(strSelectedData);
-		pSoftwareLineEdit->setToolTip(strSelectedData);
-	}
-	else
-	{
-		pSoftwareLineEdit->clear();
-	}
-}
-
-void InterfaceWidget::softwaretextChanged(const QString &text)   //软件框内容更新
-{
-	if (softwareSelect[m_Last_Faultmodel - 1] != "")
-	{
-		pSoftwareLineEdit->setText(softwareSelect[m_Last_Faultmodel - 1]);
-	}
-}
-
-
-//设置确定和清除按键值
-void InterfaceWidget::comfrim()
-{
-	switch (m_Last_Faultmodel)
-	{
-		//与舱室相关的故障模式
-	case 1:
-	case 2:
-	{
-		if (cabinSelect[m_Last_Faultmodel - 1] == "")
-		{
-			QMessageBox *m = new QMessageBox(QMessageBox::Warning, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请至少选择一个舱室！"));
-			m->setStandardButtons(QMessageBox::Ok);
-			m->setButtonText(QMessageBox::Ok, QString::fromLocal8Bit("确定"));
-			m->show();
-			m->exec();
-		}
-		else
-		{
-			QString selectcabin = cabinSelect[m_Last_Faultmodel - 1];
-			QStringList tempcabin = selectcabin.split(";");
-			for (int j = 0; j < tempcabin.size(); j++)
-			{
-				FaultState * temp = new FaultState();
-				temp->fault_func_name = modelSelect[m_Last_Faultmodel - 1];
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("舱室起火"))
-				{
-					temp->fault_func = 1;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("空调失效"))
-				{
-					temp->fault_func = 0;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("舱室进水"))
-				{
-					temp->fault_func = 1;
-				}
-				temp->fault_model = m_Last_Faultmodel;
-				temp->fault_model_name = faultmodelname[m_Last_Faultmodel - 1];
-				temp->ID = tempcabin.at(j);
-				temp->time = ui.errorBeginTime->value();
-				bool appendstate = true;
-				for (int i = 0; i < faultStateList.size(); i++)
-				{
-					if ((temp->ID == faultStateList.at(i)->ID) && (temp->fault_model == faultStateList.at(i)->fault_model))
-					{
-						appendstate = false;    //此时已经更改了，就不需要再添加
-						faultStateList.at(i)->fault_func = temp->fault_func;
-						faultStateList.at(i)->fault_func_name = temp->fault_func_name;
-						faultStateList.at(i)->time = temp->time;
-					}
-				}
-				if (appendstate)
-				{
-					faultStateList.append(temp);
-				}
-			}
-			updateStateWidget();
-		}
-		break;
-	}
-		//与主机相关的故障模式
-	case 3:
-	case 6:
-	case 7:
-	case 8:
-	case 9:
-	{
-		if (hostSelect[m_Last_Faultmodel - 1] == "")
-		{
-			QMessageBox *m = new QMessageBox(QMessageBox::Warning, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请至少选择一个主机！"));
-			m->setStandardButtons(QMessageBox::Ok);
-			m->setButtonText(QMessageBox::Ok, QString::fromLocal8Bit("确定"));
-			m->show();
-			m->exec();
-		}
-		else
-		{
-			QString selecthost = hostSelect[m_Last_Faultmodel - 1];
-			QStringList temphost = selecthost.split(";");
-			for (int j = 0; j < temphost.size(); j++)
-			{
-				FaultState * temp = new FaultState();
-				temp->fault_func_name = modelSelect[m_Last_Faultmodel - 1];
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("主机运行失效"))
-				{
-					temp->fault_func = 2;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("CPU超频使用"))
-				{
-					temp->fault_func = 0;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("风扇散热不好"))
-				{
-					temp->fault_func = 0;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("主机起火"))
-				{
-					temp->fault_func = 1;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("硬盘读写频繁"))
-				{
-					temp->fault_func = 0;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("固件老化灰尘多"))
-				{
-					temp->fault_func = 0;
-				}
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("软件运行占用资源过多"))
-				{
-					temp->fault_func = 3;
-				}
-				temp->fault_model = m_Last_Faultmodel;
-				temp->fault_model_name = faultmodelname[m_Last_Faultmodel - 1];
-				temp->ID = temphost.at(j);
-				temp->time = ui.errorBeginTime->value();
-				bool appendstate = true;
-				for (int i = 0; i < faultStateList.size(); i++)
-				{
-					if ((temp->ID == faultStateList.at(i)->ID) && (temp->fault_model == faultStateList.at(i)->fault_model))
-					{
-						appendstate = false;    //此时已经更改了，就不需要再添加
-						faultStateList.at(i)->fault_func = temp->fault_func;
-						faultStateList.at(i)->fault_func_name = temp->fault_func_name;
-						faultStateList.at(i)->time = temp->time;
-						break;
-					}
-				}
-				if (appendstate)
-				{
-					faultStateList.append(temp);
-				}
-			}
-			updateStateWidget();
-		}
-		break;
-	}
-		//与软件相关的故障模式
-	case 4:
-	{
-		if (softwareSelect[m_Last_Faultmodel - 1] == "")
-		{
-			QMessageBox *m = new QMessageBox(QMessageBox::Warning, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请至少选择一个软件！"));
-			m->setStandardButtons(QMessageBox::Ok);
-			m->setButtonText(QMessageBox::Ok, QString::fromLocal8Bit("确定"));
-			m->show();
-			m->exec();
-		}
-		else
-		{
-			QString selectsoftware = softwareSelect[m_Last_Faultmodel - 1];
-			QStringList tempsoftware = selectsoftware.split(";");
-			for (int j = 0; j < tempsoftware.size(); j++)
-			{
-				FaultState * temp = new FaultState();
-				temp->fault_func_name = modelSelect[m_Last_Faultmodel - 1];
-				if (modelSelect[m_Last_Faultmodel - 1] == QString::fromLocal8Bit("软件运行失效"))
-				{
-					temp->fault_func = 1;
-				}
-				temp->fault_model = m_Last_Faultmodel;
-				temp->fault_model_name = faultmodelname[m_Last_Faultmodel - 1];
-				temp->ID = tempsoftware.at(j);
-				temp->time = ui.errorBeginTime->value();
-				bool appendstate = true;
-				for (int i = 0; i < faultStateList.size(); i++)
-				{
-					if ((temp->ID == faultStateList.at(i)->ID) && (temp->fault_model == faultStateList.at(i)->fault_model))
-					{
-						appendstate = false;    //此时已经更改了，就不需要再添加
-						faultStateList.at(i)->fault_func = temp->fault_func;
-						faultStateList.at(i)->fault_func_name = temp->fault_func_name;
-						faultStateList.at(i)->time = temp->time;
-						break;
-					}
-				}
-				if (appendstate)
-				{
-					faultStateList.append(temp);
-				}
-			}
-			updateStateWidget();
-		}
-		break;
-	}
-		//与导弹相关的故障模式
-	case 5:
-	{
-		FaultState * temp = new FaultState();
-		temp->fault_func_name = modelSelect[m_Last_Faultmodel - 1];
-		temp->fault_model = m_Last_Faultmodel;
-		temp->fault_model_name = faultmodelname[m_Last_Faultmodel - 1];
-		temp->time = ui.errorBeginTime->value();
-		bool appendstate = true;
-		for (int i = 0; i < faultStateList.size(); i++)
-		{
-			if (temp->fault_model == faultStateList.at(i)->fault_model)
-			{
-				appendstate = false;    //此时已经更改了，就不需要再添加
-				faultStateList.at(i)->time = temp->time;
-				break;
-			}
-		}
-		if (appendstate)
-		{
-			faultStateList.append(temp);
-		}
-		updateStateWidget();
-		break;
-	}
-	//与任务优先级相关的故障模式
-	case 10:
-	{
-		FaultState * temp2 = new FaultState();
-		temp2->fault_func_name = modelSelect[m_Last_Faultmodel - 1];
-		temp2->fault_model = m_Last_Faultmodel;
-		temp2->fault_model_name = faultmodelname[m_Last_Faultmodel - 1];
-		temp2->time = ui.errorBeginTime->value();
-		bool appendstate2 = true;
-		for (int i = 0; i < faultStateList.size(); i++)
-		{
-			if (temp2->fault_model == faultStateList.at(i)->fault_model)
-			{
-				appendstate2 = false;    //此时已经更改了，就不需要再添加
-				faultStateList.at(i)->time = temp2->time;
-				break;
-			}
-		}
-		if (appendstate2)
-		{
-			faultStateList.append(temp2);
-		}
-		updateStateWidget();
-		break;
-	}
-	}
-}
-
-void InterfaceWidget::clear()
-{
-	modelSelect[m_Last_Faultmodel-1] = modeltype.at(m_Last_Faultmodel - 1).at(0);
-	cabinSelect[m_Last_Faultmodel - 1] = ""; 
-	hostSelect[m_Last_Faultmodel - 1] = ""; 
-	softwareSelect[m_Last_Faultmodel - 1] = ""; 
-	ui.totalTime->setValue(30);
-	ui.errorBeginTime->setValue(5);
-	ui.modelBox->setEnabled(false);
-	ui.hostBox->setEnabled(false);
-	ui.cabinBox->setEnabled(false);
-	ui.softwareBox->setEnabled(false);
-	showSettingWidget();   //重新设置
+	return data;
 }
 
 //已选状态栏更新框
 void InterfaceWidget::updateStateWidget()   //已选状态栏更新
 {
+	qDebug() << "helleleoele!";
+	faultStateList = m_mswidget->faultStateList;
+	qDebug() << faultStateList;
+	simtotaltime = m_mswidget->simtotaltime;
 	standardItemModel = new QStandardItemModel(this);
 	QStringList list;
 	for (int i = 0; i < faultStateList.size(); i++)
@@ -840,7 +498,7 @@ void InterfaceWidget::updateStateWidget()   //已选状态栏更新
 		}
 		standardItemModel->appendRow(item);
 	}
-	ui.listView->setModel(standardItemModel);
+	ui.modelistView->setModel(standardItemModel);
 }
 
 void InterfaceWidget::addmodel(int i)       //添加故障模式
@@ -877,7 +535,7 @@ void InterfaceWidget::run()          //运行
 {
 	qDebug() << "run";
 	m_DataInstance->m_FaultStateData = faultStateList;
-	m_DataInstance->TotalTime = ui.totalTime->value();
+	m_DataInstance->TotalTime = simtotaltime;
 	emit startsim();
 }
 
@@ -909,4 +567,771 @@ void InterfaceWidget::contact()     //联系我们
 void InterfaceWidget::right_reserve()  //版权所有
 {
 	qDebug() << "right_reserve";
+}
+
+//绘制图表窗体事件
+//窗体11*****************************************************
+void InterfaceWidget::parBoxChange11()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pParListWidget11->count(); ++i)
+	{
+		QListWidgetItem *pItem = pParListWidget11->item(i);
+		QWidget *pWidget = pParListWidget11->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pParListId11 = i;
+			break;
+		}
+	}
+	pParSelect11 = parname[pParListId11];
+	pParLineEdit11->setText(pParSelect11);
+	pParLineEdit11->setToolTip(pParSelect11);
+	//设置第二个复选框的数值
+	setPosWidget11();
+}
+
+void InterfaceWidget::showparlast11(const QString &)
+{
+	pParLineEdit11->setText(pParSelect11);
+}
+
+void InterfaceWidget::setPosWidget11()
+{
+	posname11.clear();
+	if (pParListId11 == 0 || pParListId11 == 1)
+	{
+		//观察舱室的信息
+		posname11.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllcabinID().size(); i++)
+		{
+			posname11.append(m_DataInstance->SelectAllcabinID().at(i));
+		}
+	}
+	else if (pParListId11 >= 2 && pParListId11 <= 9)
+	{
+		//观察主机的信息
+		posname11.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllhostID().size(); i++)
+		{
+			posname11.append(m_DataInstance->SelectAllhostID().at(i));
+		}
+	}
+	else if (pParListId11 >= 10 && pParListId11 <= 14)
+	{
+		//观察软件的信息
+		posname11.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllsoftwareID().size(); i++)
+		{
+			posname11.append(m_DataInstance->SelectAllsoftwareID().at(i));
+		}
+	}
+	else
+	{
+		//观察导弹信息
+	}
+	//设置窗体里面的数值
+	pPosListWidget11->clear();
+	pPosListId11 = 0;
+	for (int i = 0; i < posname11.size(); i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pPosListWidget11);
+		pPosListWidget11->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget11);
+		pRadioButton->setText(posname11.at(i));
+		if (i == pPosListId11)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pPosListWidget11->addItem(pItem);
+		pPosListWidget11->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(posBoxChange11()));
+	}
+	pPosSelect11 = posname11.at(pPosListId11);
+	pPosLineEdit11->setText(pPosSelect11);
+	pPosLineEdit11->setToolTip(pPosSelect11);
+	//显示观察曲线
+	drawchart11();
+}
+
+void InterfaceWidget::posBoxChange11()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pPosListWidget11->count(); ++i)
+	{
+		QListWidgetItem *pItem = pPosListWidget11->item(i);
+		QWidget *pWidget = pPosListWidget11->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pPosListId11 = i;
+			break;
+		}
+	}
+	pPosSelect11 = posname11.at(pPosListId11);
+	pPosLineEdit11->setText(pPosSelect11);
+	pPosLineEdit11->setToolTip(pPosSelect11);
+	//显示观察曲线
+	drawchart11();
+}
+
+void InterfaceWidget::showposlast11(const QString &)
+{
+	pPosLineEdit11->setText(pPosSelect11);
+}
+
+void InterfaceWidget::drawchart11()
+{
+	QList<float> data = findData(pParListId11, pPosSelect11);
+	//根据得到的数值设置坐标
+	if (data.size() > 0)
+	{
+		QVector<QPointF> points;
+		QStringList categories;
+		if (data.size() >= maxshow)
+		{
+			for (int i = 0; i < maxshow; i++)
+			{
+				points.append(QPointF(i, data.at(data.size() - maxshow + i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < data.size(); i++)
+			{
+				points.append(QPointF(i, data.at(i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		line11->replace(points);
+		axisX11->clear();
+		axisX11->append(categories);
+	}
+	/*
+	int pos = pParListId11;
+	if (pos == 0 || pos == 3 || pos==4 || pos==5)
+	{
+		axisY11->setRange(0, 100);
+		qDebug() << "here1";
+	}
+	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
+	{
+		axisY11->setRange(0, 1);
+	}
+	else
+	{
+		axisY11->setRange(0, 2);
+	}*/
+}
+
+
+//窗体12**************************************************************
+void InterfaceWidget::parBoxChange12()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pParListWidget12->count(); ++i)
+	{
+		QListWidgetItem *pItem = pParListWidget12->item(i);
+		QWidget *pWidget = pParListWidget12->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pParListId12 = i;
+			break;
+		}
+	}
+	pParSelect12 = parname[pParListId12];
+	pParLineEdit12->setText(pParSelect12);
+	pParLineEdit12->setToolTip(pParSelect12);
+	//设置观察值窗体
+	setPosWidget12();
+}
+
+void InterfaceWidget::showparlast12(const QString &)
+{
+	pParLineEdit12->setText(pParSelect12);
+}
+
+void InterfaceWidget::setPosWidget12()
+{
+	//先获取这个相关的数值
+	posname12.clear();
+	if (pParListId12 == 0 || pParListId12 == 1)
+	{
+		//观察舱室的信息
+		posname12.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllcabinID().size(); i++)
+		{
+			posname12.append(m_DataInstance->SelectAllcabinID().at(i));
+		}
+	}
+	else if (pParListId12 >= 2 && pParListId12 <= 9)
+	{
+		//观察主机的信息
+		posname12.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllhostID().size(); i++)
+		{
+			posname12.append(m_DataInstance->SelectAllhostID().at(i));
+		}
+	}
+	else if (pParListId12 >= 10 && pParListId21 <= 14)
+	{
+		//观察软件的信息
+		posname12.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllsoftwareID().size(); i++)
+		{
+			posname12.append(m_DataInstance->SelectAllsoftwareID().at(i));
+		}
+	}
+	else
+	{
+		//观察导弹信息
+	}
+	//设置窗体里面的数值
+	pPosListWidget12->clear();
+	pPosListId12 = 0;
+	for (int i = 0; i < posname12.size(); i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pPosListWidget12);
+		pPosListWidget12->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget12);
+		pRadioButton->setText(posname12.at(i));
+		if (i == pPosListId12)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pPosListWidget12->addItem(pItem);
+		pPosListWidget12->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(posBoxChange12()));
+	}
+	pPosSelect12 = posname12.at(pPosListId12);
+	pPosLineEdit12->setText(pPosSelect12);
+	pPosLineEdit12->setToolTip(pPosSelect12);
+	//显示观察曲线
+	drawchart12();
+}
+
+void InterfaceWidget::posBoxChange12()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pPosListWidget12->count(); ++i)
+	{
+		QListWidgetItem *pItem = pPosListWidget12->item(i);
+		QWidget *pWidget = pPosListWidget12->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pPosListId12 = i;
+			break;
+		}
+	}
+	pPosSelect12 = posname12.at(pPosListId12);
+	pPosLineEdit12->setText(pPosSelect12);
+	pPosLineEdit12->setToolTip(pPosSelect12);
+	//显示观察曲线
+	drawchart12();
+}
+
+void InterfaceWidget::showposlast12(const QString &)
+{
+	pPosLineEdit12->setText(pPosSelect12);
+}
+
+void InterfaceWidget::drawchart12()
+{
+	QList<float> data = findData(pParListId12, pPosSelect12);
+	//根据得到的数值设置坐标
+	if (data.size() > 0)
+	{
+		QVector<QPointF> points;
+		QStringList categories;
+		if (data.size() >= maxshow)
+		{
+			for (int i = 0; i < maxshow; i++)
+			{
+				points.append(QPointF(i, data.at(data.size() - maxshow + i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < data.size(); i++)
+			{
+				points.append(QPointF(i, data.at(i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		line12->replace(points);
+		axisX12->clear();
+		axisX12->append(categories);
+	}
+	/*
+	int pos = pParListId12;
+	if (pos == 0 || pos == 3 || pos == 4 || pos == 5)
+	{
+		axisY12->setRange(0, 100);
+	}
+	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
+	{
+		axisY12->setRange(0, 1);
+	}
+	else
+	{
+		axisY12->setRange(0, 2);
+	}*/
+}
+
+
+//窗体21**********************************************************
+void InterfaceWidget::parBoxChange21()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pParListWidget21->count(); ++i)
+	{
+		QListWidgetItem *pItem = pParListWidget21->item(i);
+		QWidget *pWidget = pParListWidget21->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pParListId21 = i;
+			break;
+		}
+	}
+	pParSelect21 = parname[pParListId21];
+	pParLineEdit21->setText(pParSelect21);
+	pParLineEdit21->setToolTip(pParSelect21);
+	//设置观察值选择框
+	setPosWidget21();
+}
+
+void InterfaceWidget::showparlast21(const QString &)
+{
+	pParLineEdit21->setText(pParSelect21);
+}
+
+void InterfaceWidget::setPosWidget21()
+{
+	//先获取这个相关的数值
+	posname21.clear();
+	if (pParListId21 == 0 || pParListId21 == 1)
+	{
+		//观察舱室的信息
+		posname21.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllcabinID().size(); i++)
+		{
+			posname21.append(m_DataInstance->SelectAllcabinID().at(i));
+		}
+	}
+	else if (pParListId21 >= 2 && pParListId21 <= 9)
+	{
+		//观察主机的信息
+		posname21.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllhostID().size(); i++)
+		{
+			posname21.append(m_DataInstance->SelectAllhostID().at(i));
+		}
+	}
+	else if (pParListId21 >= 10 && pParListId21 <= 14)
+	{
+		//观察软件的信息
+		posname21.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllsoftwareID().size(); i++)
+		{
+			posname21.append(m_DataInstance->SelectAllsoftwareID().at(i));
+		}
+	}
+	else
+	{
+		//观察导弹信息
+	}
+	//设置窗体里面的数值
+	pPosListWidget21->clear();
+	pPosListId21 = 0;
+	for (int i = 0; i < posname21.size(); i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pPosListWidget21);
+		pPosListWidget21->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget21);
+		pRadioButton->setText(posname21.at(i));
+		if (i == pPosListId21)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pPosListWidget21->addItem(pItem);
+		pPosListWidget21->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(posBoxChange21()));
+	}
+	pPosSelect21 = posname21.at(pPosListId21);
+	pPosLineEdit21->setText(pPosSelect21);
+	pPosLineEdit21->setToolTip(pPosSelect21);
+	//显示观察曲线
+	drawchart21();
+}
+
+void InterfaceWidget::posBoxChange21()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pPosListWidget21->count(); ++i)
+	{
+		QListWidgetItem *pItem = pPosListWidget21->item(i);
+		QWidget *pWidget = pPosListWidget21->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pPosListId21 = i;
+			break;
+		}
+	}
+	pPosSelect21 = posname21.at(pPosListId21);
+	pPosLineEdit21->setText(pPosSelect21);
+	pPosLineEdit21->setToolTip(pPosSelect21);
+	//显示观察曲线
+	drawchart21();
+}
+
+void InterfaceWidget::showposlast21(const QString &)
+{
+	pPosLineEdit21->setText(pPosSelect21);
+}
+
+void InterfaceWidget::drawchart21()
+{
+	QList<float> data = findData(pParListId21, pPosSelect21);
+	//根据得到的数值设置坐标
+	if (data.size() > 0)
+	{
+		QVector<QPointF> points;
+		QStringList categories;
+		if (data.size() >= maxshow)
+		{
+			for (int i = 0; i < maxshow; i++)
+			{
+				points.append(QPointF(i, data.at(data.size() - maxshow + i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < data.size(); i++)
+			{
+				points.append(QPointF(i, data.at(i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		line21->replace(points);
+		axisX21->clear();
+		axisX21->append(categories);
+	}
+	/*
+	int pos = pParListId21;
+	if (pos == 0 || pos == 3 || pos == 4 || pos == 5)
+	{
+		axisY21->setRange(0, 100);
+	}
+	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
+	{
+		axisY21->setRange(0, 1);
+	}
+	else
+	{
+		axisY21->setRange(0, 2);
+	}*/
+}
+
+
+//窗体22***********************************************************
+void InterfaceWidget::parBoxChange22()
+{
+	//设置参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pParListWidget22->count(); ++i)
+	{
+		QListWidgetItem *pItem = pParListWidget22->item(i);
+		QWidget *pWidget = pParListWidget22->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pParListId22 = i;
+			break;
+		}
+	}
+	pParSelect22 = parname[pParListId22];
+	pParLineEdit22->setText(pParSelect22);
+	pParLineEdit22->setToolTip(pParSelect22);
+	//设置观察值选择框
+	setPosWidget22();
+}
+
+void InterfaceWidget::showparlast22(const QString &)
+{
+	pParLineEdit22->setText(pParSelect22);
+}
+
+void InterfaceWidget::setPosWidget22()
+{
+	//先获取这个相关的数值
+	posname22.clear();
+	if (pParListId22 == 0 || pParListId22 == 1)
+	{
+		//观察舱室的信息
+		posname22.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllcabinID().size(); i++)
+		{
+			posname22.append(m_DataInstance->SelectAllcabinID().at(i));
+		}
+	}
+	else if (pParListId22 >= 2 && pParListId22 <= 9)
+	{
+		//观察主机的信息
+		posname22.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllhostID().size(); i++)
+		{
+			posname22.append(m_DataInstance->SelectAllhostID().at(i));
+		}
+	}
+	else if (pParListId22 >= 10 && pParListId22 <= 14)
+	{
+		//观察软件的信息
+		posname22.append(QString::fromLocal8Bit("不限"));
+		for (int i = 0; i < m_DataInstance->SelectAllsoftwareID().size(); i++)
+		{
+			posname22.append(m_DataInstance->SelectAllsoftwareID().at(i));
+		}
+	}
+	else
+	{
+		//观察导弹信息
+	}
+	//设置窗体里面的数值
+	pPosListWidget22->clear();
+	pPosListId22 = 0;
+	for (int i = 0; i < posname22.size(); i++)
+	{
+		QListWidgetItem *pItem = new QListWidgetItem(pPosListWidget22);
+		pPosListWidget22->addItem(pItem);
+		pItem->setData(Qt::UserRole, i);
+		//父窗体被关闭时候，自身的这些创建局部指针也会关闭，就不会造成内存泄露的问题
+		QRadioButton *pRadioButton = new QRadioButton(ui.selectwidget22);
+		pRadioButton->setText(posname22.at(i));
+		if (i == pPosListId22)
+		{
+			pRadioButton->setChecked(true);
+		}
+		pPosListWidget22->addItem(pItem);
+		pPosListWidget22->setItemWidget(pItem, pRadioButton);
+		connect(pRadioButton, SIGNAL(clicked(bool)), this, SLOT(posBoxChange22()));
+	}
+	pPosSelect22 = posname22.at(pPosListId22);
+	pPosLineEdit22->setText(pPosSelect22);
+	pPosLineEdit22->setToolTip(pPosSelect22);
+	//显示观察曲线
+	drawchart22();
+}
+
+void InterfaceWidget::posBoxChange22()
+{
+	//设置观察参数选择框
+	QObject *object = QObject::sender();
+	for (int i = 0; i < pPosListWidget22->count(); ++i)
+	{
+		QListWidgetItem *pItem = pPosListWidget22->item(i);
+		QWidget *pWidget = pPosListWidget22->itemWidget(pItem);
+		QRadioButton *pCheckBox = (QRadioButton *)pWidget;
+		if (sender() == pCheckBox)
+		{
+			pPosListId22 = i;
+			break;
+		}
+	}
+	pPosSelect22 = posname22.at(pPosListId22);
+	pPosLineEdit22->setText(pPosSelect22);
+	pPosLineEdit22->setToolTip(pPosSelect22);
+	//显示观察曲线
+	drawchart22();
+}
+
+void InterfaceWidget::showposlast22(const QString &)
+{
+	pPosLineEdit22->setText(pPosSelect22);
+}
+
+void InterfaceWidget::drawchart22()
+{
+	QList<float> data = findData(pParListId22, pPosSelect22);
+	//根据得到的数值设置坐标
+	if (data.size() > 0)
+	{
+		QVector<QPointF> points;
+		QStringList categories;
+		if (data.size() >= maxshow)
+		{
+			for (int i = 0; i < maxshow; i++)
+			{
+				points.append(QPointF(i, data.at(data.size() - maxshow + i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < data.size(); i++)
+			{
+				points.append(QPointF(i, data.at(i)));
+				categories << QString::number(i + 1);
+			}
+		}
+		line22->replace(points);
+		axisX22->clear();
+		axisX22->append(categories);
+	}
+	/*
+	int pos = pParListId22;
+	if (pos == 0 || pos == 3 || pos == 4 || pos == 5)
+	{
+		axisY22->setRange(0, 100);
+	}
+	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
+	{
+		axisY22->setRange(0, 1);
+	}
+	else
+	{
+		axisY22->setRange(0, 2);
+	}*/
+}
+
+
+
+//外面接口，更新显示的数据
+void InterfaceWidget::updateChartData()   //更新显示的数据
+{
+	//窗体11
+	QList<float> data = findData(pParListId11, pPosSelect11);
+	if (data.size() > 0)
+	{
+		if (line11->pointsVector().size() == maxshow)
+		{
+			QVector<QPointF> points = line11->pointsVector();
+			points.removeFirst();
+			for (int j = 0; j < points.size(); j++)
+			{
+				points[j] = QPointF(j, points.at(j).y());  //让这些点的横坐标-1
+			}
+			points.append(QPointF(maxshow-1, data.at(data.size() - 1)));
+			line11->replace(points);
+			QStringList categories = axisX11->categories();
+			categories.removeFirst();
+			categories << QString::number(data.size());
+			axisX11->clear();
+			axisX11->append(categories);
+		}
+		else
+		{
+			line11->append(QPointF(data.size() - 1, data.at(data.size() - 1)));
+			QStringList categories = axisX11->categories();
+			categories << QString::number(data.size());
+			axisX11->clear();
+			axisX11->append(categories);
+		}
+	}
+	//窗体12
+	data = findData(pParListId12, pPosSelect12);
+	if (data.size() > 0)
+	{
+		if (line12->pointsVector().size() == maxshow)
+		{
+			QVector<QPointF> points = line12->pointsVector();
+			points.removeFirst();
+			for (int j = 0; j < points.size(); j++)
+			{
+				points[j] = QPointF(j, points.at(j).y());  //让这些点的横坐标-1
+			}
+			points.append(QPointF(maxshow - 1, data.at(data.size() - 1)));
+			line12->replace(points);
+			QStringList categories = axisX12->categories();
+			categories.removeFirst();
+			categories << QString::number(data.size());
+			axisX12->clear();
+			axisX12->append(categories);
+		}
+		else
+		{
+			line12->append(QPointF(data.size() - 1, data.at(data.size() - 1)));
+			QStringList categories = axisX12->categories();
+			categories << QString::number(data.size());
+			axisX12->clear();
+			axisX12->append(categories);
+		}
+	}
+	//窗体21
+	data = findData(pParListId21, pPosSelect21);
+	if (data.size() > 0)
+	{
+		if (line21->pointsVector().size() == maxshow)
+		{
+			QVector<QPointF> points = line21->pointsVector();
+			points.removeFirst();
+			for (int j = 0; j < points.size(); j++)
+			{
+				points[j] = QPointF(j, points.at(j).y());  //让这些点的横坐标-1
+			}
+			points.append(QPointF(maxshow - 1, data.at(data.size() - 1)));
+			line21->replace(points);
+			QStringList categories = axisX21->categories();
+			categories.removeFirst();
+			categories << QString::number(data.size());
+			axisX21->clear();
+			axisX21->append(categories);
+		}
+		else
+		{
+			line21->append(QPointF(data.size() - 1, data.at(data.size() - 1)));
+			QStringList categories = axisX21->categories();
+			categories << QString::number(data.size());
+			axisX21->clear();
+			axisX21->append(categories);
+		}
+	}
+	//窗体22
+	data = findData(pParListId22, pPosSelect22);
+	if (data.size() > 0)
+	{
+		if (line22->pointsVector().size() == maxshow)
+		{
+			QVector<QPointF> points = line22->pointsVector();
+			points.removeFirst();
+			for (int j = 0; j < points.size(); j++)
+			{
+				points[j] = QPointF(j, points.at(j).y());  //让这些点的横坐标-1
+			}
+			points.append(QPointF(maxshow - 1, data.at(data.size() - 1)));
+			line22->replace(points);
+			QStringList categories = axisX22->categories();
+			categories.removeFirst();
+			categories << QString::number(data.size());
+			axisX22->clear();
+			axisX22->append(categories);
+		}
+		else
+		{
+			line22->append(QPointF(data.size() - 1, data.at(data.size() - 1)));
+			QStringList categories = axisX22->categories();
+			categories << QString::number(data.size());
+			axisX22->clear();
+			axisX22->append(categories);
+		}
+	}
 }

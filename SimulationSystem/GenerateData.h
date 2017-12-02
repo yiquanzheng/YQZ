@@ -31,6 +31,9 @@ public:
 public slots:
 	void simulation();//初始化为正常值
 
+signals:
+	void simover();    //执行完成
+
 private:
 	QDocument *m_DataInstance;  //数据操作类对象
 	QTimer *timer1;//一个1秒一次的定时器

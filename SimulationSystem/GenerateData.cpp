@@ -8,6 +8,8 @@ GenerateData::GenerateData(QObject * parent) : QObject(parent)
 	//关联定时器溢出信号和相应的槽函数
 	connect(timer1, &QTimer::timeout, this, &GenerateData::changeData);
 	timer1->setInterval(1000);//1秒,还没有start
+
+	srand((unsigned)time(NULL));
 }
 
 GenerateData::~GenerateData()
@@ -20,50 +22,116 @@ void GenerateData::simulation()
 	timer1->stop();
 	count = 0;
 	m_ship = new ShipEnvironment(); //定义一个舰艇类，并且赋初始值
-	//赋值为默认的正常值
-	for (int i = 0; i < m_DataInstance->m_SoftWareData.size(); i++)
-	{
-		SoftwareData *temp = m_DataInstance->m_SoftWareData.at(i);
-		temp->cabinT = m_DataInstance->m_NormalValue->cabinT;
-		temp->cabinH = m_DataInstance->m_NormalValue->cabinH;
-		temp->hostState = true;
-		temp->hostComputeOR = m_DataInstance->m_NormalValue->hostComputeOR;
-		temp->hostMemoryOR = m_DataInstance->m_NormalValue->hostMemoryOR;
-		temp->hostBandwidthOR = m_DataInstance->m_NormalValue->hostBandwidthOR;
-		temp->hostStorageOR = m_DataInstance->m_NormalValue->hostStorageOR;
-		temp->hostMainboardT = m_DataInstance->m_NormalValue->hostMainboardT;
-		temp->hostCpuT = m_DataInstance->m_NormalValue->hostCpuT;
-		temp->hostHarddiskT = m_DataInstance->m_NormalValue->hostHarddiskT;
-		temp->softwareHeartBeat = true;
-		//最后set回去
-		m_DataInstance->SetBysoftware(temp->softwareID,temp);
+
+									//先产生舱室的温度、湿度，在分配到每个舱室下的所有软件
+	QVector<QString> cabinIdVector = m_DataInstance->SelectAllcabinID();
+	//遍历所有舱室
+	for (int i = 0; i < cabinIdVector.size(); i++) {
+		QString cabinId = cabinIdVector.at(i);
+		//获得舱室的配置值
+		float normal_cabinT = m_DataInstance->m_NormalValue->cabinT;
+		float normal_cabinH = m_DataInstance->m_NormalValue->cabinH;
+		//假设所有舱室正常值都一样
+		//float cabinT = normal_cabinT;
+		//float cabinH = normal_cabinH;
+
+		/*
+		或者正常值是波动的随机值
+		*/
+		float cabinT = int(rand() % (8)) + (normal_cabinT - 4);                  //    35+/-4
+		float cabinH = float(rand() % (40)) / 100.0 + (normal_cabinH - 0.2);     //   0.5+/-0.2
+
+																				 //赋值给舱室里的所有软件
+		QVector<SoftwareData *> softWareVec = m_DataInstance->SelectBycabinID(cabinId);
+		for (int j = 0; j < softWareVec.size(); j++) {
+
+			softWareVec.at(j)->cabinT = cabinT;
+			softWareVec.at(j)->cabinH = cabinH;
+
+			//最后set回去
+			m_DataInstance->SetBysoftware(softWareVec.at(j)->softwareID, softWareVec.at(j));
+		}
 	}
-	//为软件的资源占用比赋值，每个软件等于主机占用比的平均数
+
+	//先生成随机的主机资源占用比，然后为软件的资源占用比赋值，每个软件等于所属主机资源占用比的平均数
 	QVector<QString> hostIdVector = m_DataInstance->SelectAllhostID();
+	//遍历所有的主机
 	for (int i = 0; i < hostIdVector.size(); i++)
 	{
 		QString hostId = hostIdVector.at(i);
+
+		//获得主机温度的配置值
+		float normal_hostMainboardT = m_DataInstance->m_NormalValue->hostMainboardT;
+		float normal_hostCpuT = m_DataInstance->m_NormalValue->hostCpuT;
+		float normal_hostHarddiskT = m_DataInstance->m_NormalValue->hostHarddiskT;
+		//假设所有主机正常值都一样
+		//float hostMainboardT = normal_hostMainboardT;
+		//float hostCpuT = normal_hostCpuT;
+		//float hostHarddiskT = normal_hostHarddiskT;
+
+		/*
+		或者正常值是波动的随机值
+		*/
+		float hostMainboardT = int(rand() % (8)) + (normal_hostMainboardT - 4);                  //    35+/-4
+		float hostCpuT = int(rand() % (8)) + (normal_hostCpuT - 4);                              //    35+/-4
+		float hostHarddiskT = int(rand() % (8)) + (normal_hostHarddiskT - 4);                    //    35+/-4
+
+																								 //主机状态
+		bool hostState = true;
+		//软件心跳
+		bool softwareHeartBeat = true;
+
+		//产生随机的主机资源占用比
+		float gap = 0.2;
+		float normal = 0.0;
+		//主机计算资源
+		normal = m_DataInstance->m_NormalValue->hostComputeOR;
+		float hostComputeOR = float(rand() % (40)) / 100.0 + (normal - gap); //(0.01-0.40之间) + 0.3
+																			 //主机存储资源
+		normal = m_DataInstance->m_NormalValue->hostMemoryOR;
+		float hostMemoryOR = float(rand() % (40)) / 100.0 + (normal - gap);
+		//主机网络资源
+		normal = m_DataInstance->m_NormalValue->hostBandwidthOR;
+		float hostBandwidthOR = float(rand() % (40)) / 100.0 + (normal - gap);
+		//主机存储资源
+		normal = m_DataInstance->m_NormalValue->hostStorageOR;
+		float hostStorageOR = float(rand() % (40)) / 100.0 + (normal - gap);
+
+		//接下来平均到 主机 下的所有软件
 		QVector<SoftwareData *> softWareVec = m_DataInstance->SelectByhostID(hostId);
 		int size = softWareVec.size();
-		for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 		{
-			softWareVec.at(i)->softwareComputeOR = softWareVec.at(i)->hostComputeOR / size;
-			softWareVec.at(i)->softwareBandwidthOR = softWareVec.at(i)->hostBandwidthOR / size;
-			softWareVec.at(i)->softwareMemoryOR = softWareVec.at(i)->hostMemoryOR / size;
-			softWareVec.at(i)->softwareStorageOR = softWareVec.at(i)->hostStorageOR / size;
+			//随机的主机占用资源，直接赋值
+			softWareVec.at(j)->hostComputeOR = hostComputeOR;
+			softWareVec.at(j)->hostBandwidthOR = hostBandwidthOR;
+			softWareVec.at(j)->hostMemoryOR = hostMemoryOR;
+			softWareVec.at(j)->hostStorageOR = hostStorageOR;
+			//主机温度
+			softWareVec.at(j)->hostCpuT = hostCpuT;
+			softWareVec.at(j)->hostHarddiskT = hostHarddiskT;
+			softWareVec.at(j)->hostMainboardT = hostMainboardT;
+			//主机状态和软件心跳
+			softWareVec.at(j)->hostState = hostState;
+			softWareVec.at(j)->softwareHeartBeat = softwareHeartBeat;
+			//软件的占用资源，求平均
+			softWareVec.at(j)->softwareComputeOR = hostComputeOR / size;
+			softWareVec.at(j)->softwareBandwidthOR = hostBandwidthOR / size;
+			softWareVec.at(j)->softwareMemoryOR = hostMemoryOR / size;
+			softWareVec.at(j)->softwareStorageOR = hostStorageOR / size;
 
 			//最后set回去
-			m_DataInstance->SetBysoftware(softWareVec.at(i)->softwareID, softWareVec.at(i));
+			m_DataInstance->SetBysoftware(softWareVec.at(j)->softwareID, softWareVec.at(j));
 		}
 
 	}
 	/*
 	for (int i = 0; i < m_DataInstance->m_SoftWareData.size(); i++)
 	{
-		m_DataInstance->m_SoftWareData.at(i)->showData();
+	m_DataInstance->m_SoftWareData.at(i)->showData();
 	}
 	*/
-	clearDataList();
+	clearDataList();//清空列表
 	timer1->start();//开始定时器
 }
 
@@ -425,11 +493,12 @@ void GenerateData::changeData(){
 	addDataList();
 	
 	//输出测试信息
-	printMsg();
+	//printMsg();
 
 	if (count == m_DataInstance->TotalTime)
-	//if (count == 10) 
 		timer1->stop();
+
+	emit simover();
 }
 
 void GenerateData::clearDataList()//清除历史数据list
@@ -576,9 +645,9 @@ void GenerateData::printMsg(){
 	//m_DataInstance->m_SoftWareData.at(0)->showData();
 
 	//显示一下某一个列表的信息
-	qDebug() << "..........list start...........";
+	//qDebug() << "..........list start...........";
 	for (int i = 0; i < m_DataInstance->m_CabinPar.at(0)->cabinT.size(); i++){
-		qDebug() << m_DataInstance->m_CabinPar.at(0)->cabinT.at(i);
+		//qDebug() << m_DataInstance->m_CabinPar.at(0)->cabinT.at(i);
 	}
-	qDebug() << "...........list end..........";
+	//qDebug() << "...........list end..........";
 }
