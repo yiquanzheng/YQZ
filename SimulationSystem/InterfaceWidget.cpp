@@ -18,6 +18,8 @@ InterfaceWidget::~InterfaceWidget()
 void InterfaceWidget::init()
 {
 	initMenuBar();
+	//设置图表绘制区域
+	setAllChartView();
 	initparBox();
 	connect(ui.modesetbtn, SIGNAL(clicked()), this, SLOT(openModeSetWidget()));
 	connect(ui.startsimbtn, SIGNAL(clicked()), this, SLOT(run()));
@@ -235,8 +237,6 @@ void InterfaceWidget::initparBox()        //初始化参数可选框
 	pParLineEdit22->setToolTip(pParSelect22);
 	setPosWidget22();
 
-	//设置图表绘制区域
-	setAllChartView();
 }
 
 void InterfaceWidget::setAllChartView()
@@ -254,7 +254,7 @@ void InterfaceWidget::setAllChartView()
 	}
 	axisX11->append(categories);   //设置X坐标范围   
 	axisX11->setTitleText("t/s"); //设置X坐标名字  
-	axisY11 = new QValueAxis(); 
+	axisY11 = new QValueAxis; 
 	axisY11->setRange(0, 100);
 	chartview11 = new QChartView(this);
 	chartview11->setRenderHint(QPainter::Antialiasing);
@@ -344,7 +344,6 @@ void InterfaceWidget::setAllChartView()
 	chart22->setAxisX(axisX22, line22);
 	chart22->setAxisY(axisY22, line22);
 	chart22->legend()->hide();
-
 }
 
 QList<float> InterfaceWidget::findData(int par, QString pos)
@@ -374,43 +373,43 @@ QList<float> InterfaceWidget::findData(int par, QString pos)
 		id = m_DataInstance->SelectHostParByhostID(pos);
 		if (id != -1)
 		{
-			if (pParListId11 == 2)
+			if (par == 2)
 			{
 				QList<bool> data1;
 				data1 = m_DataInstance->m_HostPar.at(id)->hostState;
 				for (int m = 0; m < data1.size(); m++)
 				{
-					if (data1.at(m) == false)
-					{
-						data.append(0);
-					}
-					else
+					if (data1.at(m) == true)
 					{
 						data.append(1);
 					}
+					else
+					{
+						data.append(0);
+					}
 				}
 			}
-			else if (pParListId11 == 3)
+			else if (par == 3)
 			{
 				data = m_DataInstance->m_HostPar.at(id)->hostMT;
 			}
-			else if (pParListId11 == 4)
+			else if (par == 4)
 			{
 				data = m_DataInstance->m_HostPar.at(id)->hostCT;
 			}
-			else if (pParListId11 == 5)
+			else if (par == 5)
 			{
 				data = m_DataInstance->m_HostPar.at(id)->hostHT;
 			}
-			else if (pParListId11 == 6)
+			else if (par == 6)
 			{
 				data = m_DataInstance->m_HostPar.at(id)->hostCOR;
 			}
-			else if (pParListId11 == 7)
+			else if (par == 7)
 			{
 				data = m_DataInstance->m_HostPar.at(id)->hostMOR;
 			}
-			else if (pParListId11 == 8)
+			else if (par == 8)
 			{
 				data = m_DataInstance->m_HostPar.at(id)->hostBOR;
 			}
@@ -425,31 +424,31 @@ QList<float> InterfaceWidget::findData(int par, QString pos)
 		id = m_DataInstance->SelectSoftwareParBysoftwareID(pos);
 		if (id != -1)
 		{
-			if (pParListId11 == 10)
+			if (par == 10)
 			{
 				QList<bool> data1;
 				data1 = m_DataInstance->m_SoftwarePar.at(id)->softwareState;
 				for (int m = 0; m < data1.size(); m++)
 				{
-					if (data1.at(m) == false)
-					{
-						data.append(0);
-					}
-					else
+					if (data1.at(m) == true)
 					{
 						data.append(1);
 					}
+					else
+					{
+						data.append(0);
+					}
 				}
 			}
-			if (pParListId11 == 11)
+			else if (par == 11)
 			{
 				data = m_DataInstance->m_SoftwarePar.at(id)->softwareCOR;
 			}
-			else if (pParListId11 == 12)
+			else if (par == 12)
 			{
 				data = m_DataInstance->m_SoftwarePar.at(id)->softwareMOR;
 			}
-			else if (pParListId11 == 13)
+			else if (par == 13)
 			{
 				data = m_DataInstance->m_SoftwarePar.at(id)->softwareBOR;
 			}
@@ -713,21 +712,22 @@ void InterfaceWidget::drawchart11()
 		axisX11->clear();
 		axisX11->append(categories);
 	}
-	/*
 	int pos = pParListId11;
 	if (pos == 0 || pos == 3 || pos==4 || pos==5)
 	{
 		axisY11->setRange(0, 100);
-		qDebug() << "here1";
+		axisY11->setTickCount(6);
 	}
 	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
 	{
-		axisY11->setRange(0, 1);
+		axisY11->setRange(0, 1.2);
+		axisY11->setTickCount(7);
 	}
 	else
 	{
-		axisY11->setRange(0, 2);
-	}*/
+		axisY11->setRange(-1, 2);
+		axisY11->setTickCount(4);
+	}
 }
 
 
@@ -875,20 +875,23 @@ void InterfaceWidget::drawchart12()
 		axisX12->clear();
 		axisX12->append(categories);
 	}
-	/*
+	
 	int pos = pParListId12;
 	if (pos == 0 || pos == 3 || pos == 4 || pos == 5)
 	{
 		axisY12->setRange(0, 100);
+		axisY12->setTickCount(6);
 	}
 	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
 	{
-		axisY12->setRange(0, 1);
+		axisY12->setRange(0, 1.2);
+		axisY12->setTickCount(7);
 	}
 	else
 	{
-		axisY12->setRange(0, 2);
-	}*/
+		axisY12->setRange(-1, 2);
+		axisY12->setTickCount(4);
+	}
 }
 
 
@@ -1036,20 +1039,23 @@ void InterfaceWidget::drawchart21()
 		axisX21->clear();
 		axisX21->append(categories);
 	}
-	/*
+	
 	int pos = pParListId21;
 	if (pos == 0 || pos == 3 || pos == 4 || pos == 5)
 	{
 		axisY21->setRange(0, 100);
+		axisY21->setTickCount(6);
 	}
 	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
 	{
-		axisY21->setRange(0, 1);
+		axisY21->setRange(0, 1.2);
+		axisY21->setTickCount(7);
 	}
 	else
 	{
-		axisY21->setRange(0, 2);
-	}*/
+		axisY21->setRange(-1, 2);
+		axisY21->setTickCount(4);
+	}
 }
 
 
@@ -1197,20 +1203,23 @@ void InterfaceWidget::drawchart22()
 		axisX22->clear();
 		axisX22->append(categories);
 	}
-	/*
+	
 	int pos = pParListId22;
 	if (pos == 0 || pos == 3 || pos == 4 || pos == 5)
 	{
 		axisY22->setRange(0, 100);
+		axisY22->setTickCount(6);
 	}
 	else if (pos == 1 || pos == 6 || pos == 7 || pos == 8 || pos == 9 || pos == 11 || pos == 12 || pos == 13 || pos == 14)
 	{
-		axisY22->setRange(0, 1);
+		axisY22->setRange(0, 1.2);
+		axisY22->setTickCount(7);
 	}
 	else
 	{
-		axisY22->setRange(0, 2);
-	}*/
+		axisY22->setRange(-1, 2);
+		axisY22->setTickCount(4);
+	}
 }
 
 

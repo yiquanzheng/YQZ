@@ -602,7 +602,7 @@ void GenerateData::addDataList(){
 		SoftwareData *soft = m_DataInstance->SelectBysoftwareID(softwareID);
 		if (soft != NULL) { //保证有软件
             //添加相应时间的历史值
-			m_DataInstance->m_SoftwarePar.at(software)->softwareState.append(soft->softwareStorageOR);
+			m_DataInstance->m_SoftwarePar.at(software)->softwareState.append(soft->softwareHeartBeat);
 			m_DataInstance->m_SoftwarePar.at(software)->softwareCOR.append(soft->softwareComputeOR);
 			m_DataInstance->m_SoftwarePar.at(software)->softwareMOR.append(soft->softwareMemoryOR);
 			m_DataInstance->m_SoftwarePar.at(software)->softwareBOR.append(soft->softwareBandwidthOR);
@@ -621,8 +621,8 @@ void GenerateData::printMsg(){
 	QString qstr = time.toString("yyyy-MM-dd hh:mm:ss");
 	qDebug() << "************************" << qstr << "*********************" << endl;
 
-	qDebug() << count << "  " << m_DataInstance->m_SoftWareData.at(0)->cabinT;
-	qDebug() << count << "  " << m_DataInstance->m_SoftWareData.at(4)->cabinH;
+	//qDebug() << count << "  " << m_DataInstance->m_SoftWareData.at(0)->cabinT;
+	//qDebug() << count << "  " << m_DataInstance->m_SoftWareData.at(4)->cabinH;
 	//qDebug() << m_DataInstance->m_SoftWareData.at(0)->cabinH;
 
 	//qDebug() << m_DataInstance->m_SoftWareData.at(0)->hostMainboardT;
@@ -646,8 +646,8 @@ void GenerateData::printMsg(){
 
 	//显示一下某一个列表的信息
 	//qDebug() << "..........list start...........";
-	for (int i = 0; i < m_DataInstance->m_CabinPar.at(0)->cabinT.size(); i++){
-		//qDebug() << m_DataInstance->m_CabinPar.at(0)->cabinT.at(i);
-	}
+	//for (int i = 0; i < m_DataInstance->m_CabinPar.at(0)->cabinT.size(); i++){
+	//	qDebug() << m_DataInstance->m_CabinPar.at(0)->cabinT.at(i);
+	//}
 	//qDebug() << "...........list end..........";
 }
