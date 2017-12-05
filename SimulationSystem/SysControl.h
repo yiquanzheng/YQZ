@@ -5,6 +5,9 @@
 #include "LoadConfig.h"
 #include "InterfaceWidget.h"
 #include "GenerateData.h"
+//=========================
+#include "Decision.h"
+//=========================
 class SysControl :public QObject
 {
 	Q_OBJECT
@@ -18,6 +21,9 @@ public:
 	InterfaceWidget *m_inwidget;
 	GenerateData *m_gen;
 	QDocument *m_DataInstance;  //数据操作类对象
+	//===============================
+	Decision *m_dec;
+	//===============================
 };
 
 #endif // SYSCONTROL_H

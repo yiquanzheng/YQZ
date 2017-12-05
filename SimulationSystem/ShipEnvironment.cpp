@@ -25,11 +25,6 @@ ShipEnv ShipEnvironment::getShipEnv()
 	return this->m_shipEnv;
 }
 
-//ShipEnv ShipEnvironment::normal()
-//{
-//	return getShipEnv();
-//}
-
 void ShipEnvironment::missileDetected()
 {
 	if (this->m_shipEnv.missileTag == false)
@@ -45,9 +40,12 @@ void ShipEnvironment::missileDetected()
 	{
 		ShipEnv temp = this->m_shipEnv;
 		// 导弹1s移动的距离
-		float distance = temp.missileSpeed / 3600.0;
-		this->m_shipEnv.missileX = temp.missileX + distance * sin(temp.missileD) / (111.0 * cos(temp.missileY));
-		this->m_shipEnv.missileY = temp.missileY + distance * cos(temp.missileD) / 111.0;
+		//float distance = temp.missileSpeed / 3600.0;
+		//this->m_shipEnv.missileX = temp.missileX + distance * sin(temp.missileD) / (111.0 * cos(temp.missileY));
+		//this->m_shipEnv.missileY = temp.missileY + distance * cos(temp.missileD) / 111.0;
+
+		this->m_shipEnv.missileX = straightMove(temp.missileX, temp.missileSpeed / 3600.0 * sin(temp.missileD) / (111.0 * cos(temp.missileY)));
+		this->m_shipEnv.missileY = straightMove(temp.missileY, temp.missileSpeed / 3600.0 * cos(temp.missileD) / 111.0);
 	}
 
 	// 写入数据缓冲区
@@ -92,4 +90,9 @@ void ShipEnvironment::writeData()
 		software->shipLength = this->m_shipEnv.shipLength;
 		m_DataInstance->SetBysoftware(softwareIDs.at(i), software);
 	}
+}
+
+float ShipEnvironment::straightMove(float previous, float k)
+{
+	return previous + k;
 }

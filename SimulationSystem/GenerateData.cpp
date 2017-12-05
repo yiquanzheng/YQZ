@@ -10,6 +10,12 @@ GenerateData::GenerateData(QObject * parent) : QObject(parent)
 	timer1->setInterval(1000);//1秒,还没有start
 
 	srand((unsigned)time(NULL));
+
+	//==================================
+	publisher = new Publisher();
+	m_participant = DDSTheParticipantFactory->create_participant(0, DDS_PARTICIPANT_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);	// 创建域参与者
+	publisher->startupParticipant(m_participant);		// 启动DDS服务，实例化DDS实体
+	//==================================
 }
 
 GenerateData::~GenerateData()

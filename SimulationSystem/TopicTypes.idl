@@ -1,0 +1,33 @@
+struct SoftwareState
+{
+	string<32> taskID;
+	short priority;
+	float missileX;
+	float missileY;
+	float missileSpeed;
+	float missileD;
+	boolean missileTag;
+	float shipX;
+	float shipY;
+	float shipSpeed;
+	float shipD;
+	float shipLength;
+	string<32> cabinID;
+	float cabinT;
+	float cabinH;
+	string<32> hostID;
+	boolean hostState;
+	float hostComputeOR;
+	float hostMemoryOR;
+	float hostBandwidthOR;
+	float hostStorageOR;
+	float hostMainboardT;
+	float hostCpuT;
+	float hostHarddiskT;
+	string<32> softwareID;
+	boolean softwareHeartBeat;
+	float softwareComputeOR;
+	float softwareMemoryOR;
+	float softwareBandwidthOR;
+	float softwareStroageOR;
+};

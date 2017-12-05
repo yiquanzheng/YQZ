@@ -9,6 +9,8 @@
 #include <QTimer>
 #include <QDateTime>
 
+#include "Publisher.h"
+
 
 class GenerateData :public QObject
 {
@@ -27,6 +29,9 @@ public:
 	void addDataList();//保存历史数据到list,用于生产图像
 	void clearDataList();//清除历史数据list
 	void printMsg();//输出测试信息
+	//========================
+	Publisher *publisher;			// DDS数据发送者
+	//========================
 
 public slots:
 	void simulation();//初始化为正常值
@@ -38,6 +43,10 @@ private:
 	QDocument *m_DataInstance;  //数据操作类对象
 	QTimer *timer1;//一个1秒一次的定时器
 	ShipEnvironment *m_ship; //舰艇
+
+	//=====================================
+	DDSDomainParticipant *m_participant = NULL;
+	//=====================================
 };
 
 #endif

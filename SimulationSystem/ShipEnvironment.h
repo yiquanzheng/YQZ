@@ -43,7 +43,7 @@ private:
 	struct ShipEnv m_shipEnv;
 
 	void writeData();
-
+	float straightMove(float previous, float k);
 };
 
 #endif
